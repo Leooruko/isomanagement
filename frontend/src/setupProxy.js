@@ -1,48 +1,35 @@
-// const { createProxyMiddleware } = require('http-proxy-middleware');
-
-// module.exports = function(app) {
-//   console.log('Setting up proxy middleware...');
-  
-//   app.use(
-//     '/api/v1',
-//     createProxyMiddleware({
-//       target: 'http://localhost:8000/api/v1/',
-//       changeOrigin: true,
-//       secure: false,
-//       logLevel: 'debug',
-//       onProxyReq: (proxyReq, req, res) => {
-//         // Ensure the full path is preserved
-//         if (!proxyReq.path.startsWith('/api/v1')) {
-//           proxyReq.path = '/api/v1' + proxyReq.path;
-//         }
-//         console.log('🚀 Proxying request:', req.method, req.url, '→', proxyReq.path);
-//         console.log('🎯 Target URL:', proxyReq.getHeader('host'));
-//       },
-//       onError: (err, req, res) => {
-//         console.error('❌ Proxy error:', err.message);
-//         console.error('🔍 Error details:', err);
-//       },
-//       onProxyRes: (proxyRes, req, res) => {
-//         console.log('✅ Proxy response:', proxyRes.statusCode, req.url);
-//       }
-//     })
-//   );
-  
-//   console.log('✅ Proxy middleware setup complete');
-// };
-
-
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 module.exports = function(app) {
-  console.log('Setting up proxy middleware...');
+  // Prefer explicit override; default to 127.0.0.1 for local `npm start`.
+  // Use 127.0.0.1 (not localhost) to avoid Windows IPv6 (::1) proxy hangs.
+  // In Docker Compose, set REACT_APP_PROXY_TARGET=http://iso-backend:8000
+  const target = process.env.REACT_APP_PROXY_TARGET || 'http://127.0.0.1:8000';
 
+  console.log('Setting up proxy middleware...');
+  console.log(`Proxy target: ${target}`);
+
+  // Use pathFilter (not app.use('/api/v1', ...)) so the full /api/v1/... path
+  // is preserved. Mounting at /api/v1 strips that prefix and causes backend 404s.
   app.use(
-    '/api/v1',
     createProxyMiddleware({
-      target: 'http://iso-backend:8000/api/v1/', // 🔥 Docker service name
+      target,
       changeOrigin: true,
-      logLevel: 'debug',
+      secure: false,
+      pathFilter: '/api/v1',
+      logger: console,
+      on: {
+        error: (err, req, res) => {
+          console.error('Proxy error:', err.message);
+          if (res && !res.headersSent) {
+            res.writeHead(502, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+              success: false,
+              message: `Backend proxy failed (${target}): ${err.message}`,
+            }));
+          }
+        },
+      },
     })
   );
 

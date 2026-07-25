@@ -40,6 +40,30 @@ export interface NavigationSection {
   readonly assignmentAllowedItems?: readonly string[];
 }
 
+// Demo mode: when enabled, the primary navigation is trimmed to Dashboard,
+// Document Control, HACCP, and an Administration group (Users, Roles,
+// Permissions, Departments). Nothing else is deleted or disabled — every
+// hidden section's routes, components, and backend APIs keep working
+// exactly as before and remain reachable by direct URL. This flag only
+// affects what getNavigationForUser() returns for the sidebar.
+// Toggle by setting REACT_APP_DEMO_MODE=true at build time (defaults to
+// off, so existing/full deployments are unaffected unless opted in).
+export const isDemoModeEnabled = (): boolean =>
+  (process.env.REACT_APP_DEMO_MODE || 'false').toLowerCase() === 'true';
+
+// Section keys (matching NAVIGATION_CONFIG's keys below) kept visible when
+// demo mode is enabled. 'users' is displayed as "Administration" (see
+// NAVIGATION_CONFIG.users below) and holds Users/Roles/Permissions/
+// Departments. 'settings' (System Settings) is intentionally excluded from
+// the demo nav — it is not part of the demo's Administration group, but its
+// route/page are untouched and still reachable directly at /settings.
+const DEMO_MODE_VISIBLE_SECTIONS: readonly string[] = [
+  'dashboard',
+  'documents',
+  'haccp',
+  'users',
+];
+
 // COMPACT Navigation configuration - Reduced spacing and optimized layout
 export const NAVIGATION_CONFIG: Record<string, NavigationSection> = {
   dashboard: {
@@ -249,13 +273,28 @@ export const NAVIGATION_CONFIG: Record<string, NavigationSection> = {
   },
   
   users: {
-    title: 'User Management',
+    // Displayed as "Administration" in the demo nav (see DEMO_MODE_VISIBLE_SECTIONS).
+    // Full nav keeps the original "User Management" label/scope.
+    title: 'Administration',
     icon: People,
     order: 17,
     requiredRoles: ['System Administrator', 'QA Manager'],
     items: [
       { text: 'Users', path: '/users' },
-      { text: 'Roles & Permissions', path: '/rbac' },
+      // "Roles" and "Permissions" both open the existing Roles & Permissions
+      // page (/rbac, which has Roles / Role Summary / Permission Matrix tabs).
+      // Split into two entries per the demo nav spec; distinct query strings
+      // keep them as distinct, directly-linkable nav items (same pattern as
+      // the Document Control group's ?group= entries below).
+      { text: 'Roles', path: '/rbac?tab=roles' },
+      { text: 'Permissions', path: '/rbac?tab=permissions' },
+      // No dedicated Departments management page exists yet in the app —
+      // department data today only surfaces inside the Users page (department
+      // dropdown + "Users by Department" summary). This links there rather
+      // than to a route that doesn't exist, so it never 404s. Building a real
+      // standalone Departments admin page would be new functionality, out of
+      // scope for a nav-visibility-only change — flagging for a decision.
+      { text: 'Departments', path: '/users?tab=departments' },
     ],
   },
   
@@ -288,8 +327,16 @@ export const getNavigationForUser = (user: any): NavigationSection[] => {
     return section.requiredPermissions.some((p) => perms.includes(p));
   };
 
-  return Object.values(NAVIGATION_CONFIG)
-    .map((section) => {
+  const demoMode = isDemoModeEnabled();
+
+  return Object.entries(NAVIGATION_CONFIG)
+    .map(([sectionKey, section]) => {
+      // Demo mode trims the sidebar to the core pillars + admin utilities.
+      // This only affects what's returned here — the section's routes and
+      // APIs are untouched and still reachable directly.
+      if (demoMode && !DEMO_MODE_VISIBLE_SECTIONS.includes(sectionKey)) {
+        return null;
+      }
       // No role or permission requirements = visible to all authenticated users (e.g. Dashboard, Documents)
       const hasNoRequirements =
         (!section.requiredRoles || section.requiredRoles.length === 0) &&

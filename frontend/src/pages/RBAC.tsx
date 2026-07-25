@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Box,
@@ -99,7 +100,32 @@ const RBAC: React.FC = () => {
   const currentUser = useSelector((state: RootState) => state.auth.user);
   const canWriteRoles = !!currentUser && (hasPermission(currentUser, 'roles', 'write') || isSystemAdministrator(currentUser));
 
-  const [tabValue, setTabValue] = useState(0);
+  // Maps the Administration nav's ?tab= query param (see navigationConfig.ts:
+  // '/rbac?tab=roles', '/rbac?tab=permissions') to this page's tab index, so
+  // the "Roles" and "Permissions" nav entries land on the right tab instead
+  // of always defaulting to the first one.
+  const [searchParams] = useSearchParams();
+  const getTabIndexFromParam = (param: string | null): number => {
+    switch (param) {
+      case 'permissions':
+        return 2; // Permission Matrix
+      case 'summary':
+      case 'role_summary':
+        return 1; // Role Summary
+      case 'roles':
+      default:
+        return 0; // Roles
+    }
+  };
+
+  const [tabValue, setTabValue] = useState(() => getTabIndexFromParam(searchParams.get('tab')));
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setTabValue(getTabIndexFromParam(tabParam));
+    }
+  }, [searchParams]);
   const [openDialog, setOpenDialog] = useState(false);
   const [dialogType, setDialogType] = useState<'create' | 'edit' | 'clone'>('create');
   const [formData, setFormData] = useState({
