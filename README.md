@@ -1,8 +1,35 @@
 # ISO 22000 Food Safety Management System
 
-> **Project status:** This was my first build of an ISO 22000 food-safety management system — functionally complete (auth, dashboard, documents, HACCP, PRP, suppliers) and the reference implementation for the domain model. I'm now rebuilding the same system with a stronger foundation (typed ORM, migrations, documented workflow) at [`fsms_iso22000`](https://github.com/Leooruko/fsms_iso22000) as active work. This repo stays up as a complete, working reference.
+A system for managing ISO 22000 compliance — documents, HACCP, PRPs, and
+suppliers — for food processing and dairy facilities.
 
-A comprehensive web application for managing ISO 22000 Food Safety Management System for dairy processing facilities.
+## What this addresses
+
+Food businesses working toward ISO 22000 certification have to manage HACCP
+plans, prerequisite programs, supplier approvals, and compliance documents —
+usually spread across spreadsheets, paper files, and whatever system each
+department happens to use. Audit season turns into weeks of manually
+cross-referencing records that should already be organized. This system
+keeps documents, HACCP data, PRP tracking, and supplier records in one
+place instead.
+
+**Who this is for:** food processing and dairy facilities operating under,
+or preparing for, ISO 22000 certification — quality managers, compliance
+officers, and the people currently doing this cross-referencing by hand.
+
+**What it enables:** one system for documents, HACCP records, PRP tracking,
+and supplier data, instead of that information being split across
+spreadsheets and paper files.
+
+**My role:** designed and built solo — data model, backend API, and
+frontend.
+
+**Status:** This was my first build of this system — functionally complete
+(auth, dashboard, documents, HACCP, PRP, suppliers) and the reference
+implementation for the domain model. I'm now rebuilding the same system
+with a stronger foundation (typed ORM, migrations, documented workflow) at
+[`fsms_iso22000`](https://github.com/Leooruko/fsms_iso22000) as active
+work. This repo stays up as a complete, working reference.
 
 ## 🏗️ Project Structure
 
