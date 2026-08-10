@@ -1,5 +1,7 @@
 # ISO 22000 Food Safety Management System
 
+> **Project status:** This was my first build of an ISO 22000 food-safety management system — functionally complete (auth, dashboard, documents, HACCP, PRP, suppliers) and the reference implementation for the domain model. I'm now rebuilding the same system with a stronger foundation (typed ORM, migrations, documented workflow) at [`fsms_iso22000`](https://github.com/Leooruko/fsms_iso22000) as active work. This repo stays up as a complete, working reference.
+
 A comprehensive web application for managing ISO 22000 Food Safety Management System for dairy processing facilities.
 
 ## 🏗️ Project Structure
@@ -83,6 +85,8 @@ isomanagement/
 
 - **Username:** `admin`
 - **Password:** `admin123`
+
+*(Local development seed data only — change before any real deployment.)*
 
 ## 📚 API Endpoints
 
